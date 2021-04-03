@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+
+  var maintenance = DateTime(2021, 3, 12);
   @override
   Widget build(BuildContext context) {
     Widget titleSection = Container(
@@ -66,14 +69,13 @@ class MyApp extends StatelessWidget {
       ),
     );
 
-    final now = DateTime.now().toString();
-    var last_maintenance = 1;
+
     Widget maintenanceSection = Container(
 
     child: Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Text(now)
+        Text(DateTime.now().difference(maintenance).inDays.toString())
 
       ],
     ),
@@ -135,24 +137,40 @@ class FavoriteWidget extends StatefulWidget {
 // #docregion _FavoriteWidgetState, _FavoriteWidgetState-fields, _FavoriteWidgetState-build
 class _FavoriteWidgetState extends State<FavoriteWidget> {
   // #enddocregion _FavoriteWidgetState-build
-  bool _isFavorited = true;
-  int _favoriteCount = 41;
 
+  var rest_of_date;
 
+  @override
+  _readDate() async {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        final key = 'last_maintenance_date';
+        final value = prefs.getString(key) ?? 0;
+        print('read: $value');
+      });
+
+    }
+
+    @override
+    void initState(){
+      _readDate();
+    }
 
   // #enddocregion _FavoriteWidgetState-fields
+  // ignore: non_constant_identifier_names
+
 
   // #docregion _toggleFavorite
   void _toggleFavorite() {
-    setState(() {
-      if (_isFavorited) {
-        _favoriteCount -= 1;
-        _isFavorited = false;
-      } else {
-        _favoriteCount += 1;
-        _isFavorited = true;
-      }
+    setState(() async{
+      final prefs = await SharedPreferences.getInstance();
+      final key = "last_maintenance_date";
+      final maintenance = DateTime.now().toString();
+      final maintenanceString = maintenance.toString();
+      prefs.setString(key, maintenanceString);
+
     });
+    _readDate();
   }
   // #enddocregion _toggleFavorite
 
@@ -167,7 +185,7 @@ class _FavoriteWidgetState extends State<FavoriteWidget> {
           child: IconButton(
             padding: EdgeInsets.all(0),
             alignment: Alignment.centerRight,
-            icon: (_isFavorited ? Icon(Icons.star) : Icon(Icons.star_border)),
+            icon: (Icon(Icons.alarm)),
             color: Colors.red[500],
             onPressed: _toggleFavorite,
           ),
@@ -175,7 +193,7 @@ class _FavoriteWidgetState extends State<FavoriteWidget> {
         SizedBox(
           width: 18,
           child: Container(
-            child: Text('$_favoriteCount'),
+            child: Text('$rest_of_date'),
 
           ),
         ),
